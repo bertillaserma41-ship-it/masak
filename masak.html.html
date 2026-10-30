@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Chef Algoritma - Resep Berurutan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        chef: {
+                            orange: '#FF6B35',
+                            yellow: '#F7C59F',
+                            darkOrange: '#E85D04',
+                            cream: '#EFE9E7',
+                            navy: '#004E64',
+                            green: '#2A9D8F',
+                            red: '#E76F51'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['Fredoka', 'sans-serif'],
+                        body: ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #FF6B35 0%, #004E64 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 4px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .btn-touch {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-touch:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .step-block {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .step-block:hover {
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            body { background: white !important; }
+            main { border: none !important; box-shadow: none !important; max-width: 100% !important; }
+            header, footer, .no-print { display: none !important; }
+            #page-result { display: block !important; }
+            #certificate-card { border: 4px solid #FF6B35 !important; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-2 sm:p-4 text-slate-800">
+
+    <!-- MAIN CONTAINER APPLICATION -->
+    <main class="w-full max-w-5xl glass-card rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-[92vh]">
+
+        <!-- HEADER -->
+        <header class="bg-gradient-to-r from-chef-darkOrange to-chef-orange text-white p-4 sm:p-5 flex justify-between items-center shadow-md relative z-10">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 p-2.5 rounded-2xl text-yellow-300 text-2xl sm:text-3xl floating">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold tracking-wide">Master Chef Algoritma</h1>
+                    <p class="text-xs sm:text-sm text-amber-100 hidden sm:block">Pemrograman Resep & Logika Memasak</p>
+                </div>
+            </div>
+
+            <!-- User Info & Sound Toggle -->
+            <div id="header-user-info" class="hidden flex items-center space-x-3">
+                <div class="bg-black/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl text-right border border-white/20">
+                    <div id="display-user-name" class="font-bold text-sm sm:text-base text-yellow-300 truncate max-w-[120px] sm:max-w-none">Chef Player</div>
+                    <div id="display-user-class" class="text-xs text-amber-100">Kelas --</div>
+                </div>
+                <button id="btn-sound-toggle" onclick="toggleSound()" class="w-11 h-11 bg-white/20 hover:bg-white/30 rounded-2xl flex items-center justify-center text-xl transition btn-touch">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTAINER PAGE CONTENT -->
+        <div class="flex-1 p-4 sm:p-6 md:p-8 flex flex-col justify-center relative overflow-y-auto">
+
+            <!-- ================= HALAMAN 1: LOGIN ================= -->
+            <section id="page-login" class="max-w-md mx-auto w-full py-2 my-auto">
+                <div class="bg-white p-6 sm:p-8 rounded-3xl border-2 border-orange-100 shadow-xl text-center">
+                    <div class="w-20 h-20 bg-gradient-to-tr from-chef-darkOrange to-chef-orange text-white rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-lg mb-4 floating">
+                        <i class="fa-solid fa-hat-cowboy-side"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">Dapur Registrasi Chef</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mb-6">Masukkan nama & kelas untuk mempelajari Algoritma lewat kreasi resep lezat!</p>
+
+                    <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                        <div>
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1 ml-1"><i class="fa-solid fa-user text-chef-orange mr-1"></i> Nama Lengkap Chef / Siswa</label>
+                            <input type="text" id="input-nama" required placeholder="Contoh: Chef Andi Pratama" 
+                                class="w-full px-4 py-3 sm:py-3.5 rounded-2xl border-2 border-orange-200 focus:border-chef-orange focus:outline-none text-base font-semibold bg-orange-50/30 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1 ml-1"><i class="fa-solid fa-graduation-cap text-chef-orange mr-1"></i> Kelas / Tingkat</label>
+                            <input type="text" id="input-kelas" required placeholder="Contoh: 7 SMP / SD 5 A" 
+                                class="w-full px-4 py-3 sm:py-3.5 rounded-2xl border-2 border-orange-200 focus:border-chef-orange focus:outline-none text-base font-semibold bg-orange-50/30 transition">
+                        </div>
+
+                        <button type="submit" 
+                            class="w-full mt-4 bg-gradient-to-r from-chef-orange to-chef-darkOrange hover:from-orange-500 hover:to-orange-700 text-white font-bold py-4 rounded-2xl text-lg sm:text-xl shadow-lg hover:shadow-xl transition btn-touch flex items-center justify-center space-x-2">
+                            <span>Mulai Memasak</span>
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ================= HALAMAN 2: MODUL MATERI ALGORITMA ================= -->
+            <section id="page-materi" class="hidden max-w-3xl mx-auto w-full my-auto space-y-5">
+                <div class="text-center">
+                    <span class="bg-orange-100 text-chef-darkOrange text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Konsep Dasar Pemrograman</span>
+                    <h2 class="text-2xl sm:text-4xl font-bold text-slate-800 mt-1">Apa itu Algoritma dalam Memasak?</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl flex flex-col items-center text-center">
+                        <div class="bg-amber-500 text-white p-3 rounded-xl text-2xl mb-2"><i class="fa-solid fa-list-ol"></i></div>
+                        <h3 class="font-bold text-slate-800">1. Sequencing (Urutan)</h3>
+                        <p class="text-xs text-slate-600 mt-1">Langkah-langkah terstruktur dari awal sampai akhir. Urutan tidak boleh terbalik agar resep tidak gagal!</p>
+                    </div>
+
+                    <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl flex flex-col items-center text-center">
+                        <div class="bg-blue-500 text-white p-3 rounded-xl text-2xl mb-2"><i class="fa-solid fa-code-branch"></i></div>
+                        <h3 class="font-bold text-slate-800">2. Branching (Percabangan)</h3>
+                        <p class="text-xs text-slate-600 mt-1">Pengambilan keputusan berdasarkan kondisi (<b>IF / JIKA</b>). Contoh: Jika pedas, tambahkan cabai.</p>
+                    </div>
+
+                    <div class="bg-purple-50 border-2 border-purple-200 p-4 rounded-2xl flex flex-col items-center text-center">
+                        <div class="bg-purple-500 text-white p-3 rounded-xl text-2xl mb-2"><i class="fa-solid fa-rotate"></i></div>
+                        <h3 class="font-bold text-slate-800">3. Looping (Perulangan)</h3>
+                        <p class="text-xs text-slate-600 mt-1">Melakukan aksi yang sama berulang kali sampai jumlah tertentu. Contoh: Aduk kuah 3 kali.</p>
+                    </div>
+                </div>
+
+                <div class="text-center pt-2">
+                    <button onclick="showPage('page-select-level')" 
+                        class="bg-chef-navy hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-2xl text-lg shadow-lg transition btn-touch inline-flex items-center space-x-2">
+                        <span>Pilih Level Memasak</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ================= HALAMAN 3: PILIH LEVEL ================= -->
+            <section id="page-select-level" class="hidden max-w-4xl mx-auto w-full my-auto space-y-6">
+                <div class="text-center">
+                    <h2 class="text-2xl sm:text-4xl font-bold text-slate-800">Pilih Tantangan Resep</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Kuasai setiap teknik algoritma untuk meraih Gelar Master Chef!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- LEVEL 1 -->
+                    <div class="bg-white border-4 border-amber-300 rounded-3xl p-5 shadow-lg flex flex-col justify-between hover:border-amber-500 transition">
+                        <div>
+                            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center font-bold text-xl mb-3">1</div>
+                            <h3 class="text-lg font-bold text-slate-800">Teh Manis Hangat</h3>
+                            <span class="inline-block bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full my-2">Pemula - Sequencing</span>
+                            <p class="text-xs text-slate-600">Susun langkah sederhana pembuatan teh manis sesuai urutan algoritma yang presisi.</p>
+                        </div>
+                        <button onclick="startLevel(1)" class="mt-5 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-2xl transition btn-touch shadow-md">Mainkan Level 1</button>
+                    </div>
+
+                    <!-- LEVEL 2 -->
+                    <div class="bg-white border-4 border-blue-300 rounded-3xl p-5 shadow-lg flex flex-col justify-between hover:border-blue-500 transition">
+                        <div>
+                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-bold text-xl mb-3">2</div>
+                            <h3 class="text-lg font-bold text-slate-800">Nasi Goreng Spesial</h3>
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full my-2">Menengah - Percabangan</span>
+                            <p class="text-xs text-slate-600">Gunakan logika IF/THEN untuk memenuhi pesanan pelanggan (Pedas vs Tidak Pedas).</p>
+                        </div>
+                        <button onclick="startLevel(2)" class="mt-5 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-2xl transition btn-touch shadow-md">Mainkan Level 2</button>
+                    </div>
+
+                    <!-- LEVEL 3 -->
+                    <div class="bg-white border-4 border-purple-300 rounded-3xl p-5 shadow-lg flex flex-col justify-between hover:border-purple-500 transition">
+                        <div>
+                            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center font-bold text-xl mb-3">3</div>
+                            <h3 class="text-lg font-bold text-slate-800">Burger Bertumpuk Master</h3>
+                            <span class="inline-block bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full my-2">Lanjutan - Looping & Urutan</span>
+                            <p class="text-xs text-slate-600">Gunakan perulangan (Loop) untuk menumpuk keju dan daging sesuai permintaan pesanan!</p>
+                        </div>
+                        <button onclick="startLevel(3)" class="mt-5 w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-2xl transition btn-touch shadow-md">Mainkan Level 3</button>
+                    </div>
+                </div>
+
+                <div class="text-center pt-2">
+                    <button onclick="showPage('page-materi')" class="text-chef-darkOrange font-bold hover:underline text-sm">
+                        <i class="fa-solid fa-book-open mr-1"></i> Baca Kembali Modul Algoritma
+                    </button>
+                </div>
+            </section>
+
+            <!-- ================= HALAMAN 4: GAMEPLAY ARENA ================= -->
+            <section id="page-gameplay" class="hidden flex flex-col flex-1 justify-between space-y-3">
+                
+                <!-- TOP INFOBAR -->
+                <div class="bg-orange-50 border-2 border-orange-100 rounded-2xl p-3 flex flex-wrap justify-between items-center gap-2 shadow-sm">
+                    <div class="flex items-center space-x-2">
+                        <span id="game-level-badge" class="bg-chef-darkOrange text-white font-bold text-xs sm:text-sm px-3 py-1 rounded-xl">Level 1</span>
+                        <div id="game-timer-container" class="flex items-center text-rose-600 font-bold text-sm sm:text-base ml-2">
+                            <i class="fa-solid fa-clock mr-1"></i> <span id="game-timer">00:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Target Pesanan -->
+                    <div class="bg-white px-4 py-1.5 rounded-xl border border-orange-200 shadow-inner flex-1 mx-2 text-center">
+                        <span class="text-[10px] text-slate-400 block uppercase font-extrabold tracking-wider">Target Pesanan / Request:</span>
+                        <p id="game-mission-text" class="text-xs sm:text-sm font-bold text-chef-navy">Membuat Teh Manis Hangat Sesuai Urutan</p>
+                    </div>
+
+                    <!-- Score Indicator -->
+                    <div class="bg-amber-100 text-amber-900 font-bold px-3 py-1 rounded-xl text-xs sm:text-sm flex items-center">
+                        <i class="fa-solid fa-star text-amber-500 mr-1.5"></i> Skor: <span id="game-score" class="ml-1">0</span>
+                    </div>
+                </div>
+
+                <!-- NOTIFIKASI SYSTEM / FEEDBACK ERROR -->
+                <div id="status-message" class="hidden p-2.5 rounded-xl text-center text-xs sm:text-sm font-bold shadow-md transition"></div>
+
+                <!-- MAIN WORKSPACE: SIDE-BY-SIDE PANELS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                    
+                    <!-- PANEL KIRI: BLOK INSKTRUKSI YANG TERSEDIA -->
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
+                                <i class="fa-solid fa-cubes text-chef-orange mr-1.5"></i> Blok Instruksi Memasak (Tap untuk Tambah)
+                            </h3>
+                            <div id="available-blocks" class="space-y-2 max-h-[220px] sm:max-h-[280px] overflow-y-auto p-1">
+                                <!-- Render Blok Instruksi Dinamis -->
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 italic text-center mt-2">*Sentuh blok di atas untuk memasukkannya ke Papan Algoritma.</p>
+                    </div>
+
+                    <!-- PANEL KANAN: PAPAN ALGORITMA RESEP (SLOTS) -->
+                    <div class="bg-amber-50/60 border-2 border-amber-200 rounded-2xl p-3 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-xs font-extrabold text-amber-900 uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-clipboard-list text-amber-600 mr-1.5"></i> Papan Urutan Resep
+                                </h3>
+                                <button onclick="resetRecipeBoard()" class="text-xs text-rose-600 font-bold hover:underline">
+                                    <i class="fa-solid fa-arrow-rotate-left mr-1"></i>Reset
+                                </button>
+                            </div>
+
+                            <div id="recipe-board" class="space-y-2 min-h-[160px] max-h-[220px] sm:max-h-[280px] overflow-y-auto p-2 bg-white/80 rounded-xl border-2 border-dashed border-amber-300">
+                                <!-- Slot Urutan Algoritma -->
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL RUN COOKING -->
+                        <button onclick="runCookingAlgorithm()" 
+                            class="w-full mt-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 rounded-xl text-base shadow-lg btn-touch flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-fire-burner text-yellow-300"></i>
+                            <span>JALANKAN ALGORITMA (COOK!)</span>
+                        </button>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ================= HALAMAN 5: HASIL SKOR & SERTIFIKAT ================= -->
+            <section id="page-result" class="hidden max-w-2xl mx-auto w-full my-auto text-center space-y-5">
+                <div id="certificate-card" class="bg-gradient-to-b from-amber-50 to-orange-50 border-8 border-orange-300 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+                    
+                    <div class="w-20 h-20 bg-chef-darkOrange text-yellow-300 rounded-full mx-auto flex items-center justify-center text-4xl shadow-lg mb-2 border-4 border-white floating">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+
+                    <span class="text-xs font-extrabold text-orange-800 tracking-widest uppercase">Sertifikat Kelulusan Algoritma</span>
+                    <h2 class="text-2xl sm:text-4xl font-black text-slate-800 mt-1">MASTER CHEF ALGORITMA</h2>
+                    
+                    <p class="text-slate-600 text-xs sm:text-sm mt-2">Diberikan secara bangga kepada Chef Pemrogram:</p>
+                    <div id="res-name" class="text-2xl sm:text-3xl font-extrabold text-chef-darkOrange my-1 underline decoration-yellow-400">Chef Andi Pratama</div>
+                    <div id="res-class" class="text-xs sm:text-sm font-bold text-slate-500">Kelas: --</div>
+
+                    <div class="my-4 py-3 border-y-2 border-dashed border-orange-200 grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Skor Memasak</span>
+                            <span id="res-score" class="text-2xl sm:text-3xl font-black text-emerald-600">0</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase block">Waktu Selesai</span>
+                            <span id="res-time" class="text-2xl sm:text-3xl font-black text-chef-navy">00:00</span>
+                        </div>
+                    </div>
+
+                    <p id="res-feedback" class="text-xs sm:text-sm font-semibold text-slate-700 italic">"Selamat! Kamu berhasil menyusun logika resep masakan dengan urutan algoritma yang sempurna!"</p>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-3 no-print">
+                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-2xl text-xs sm:text-sm shadow-md transition btn-touch flex items-center space-x-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Cetak Sertifikat</span>
+                    </button>
+                    <button onclick="showPage('page-select-level')" class="bg-chef-darkOrange hover:bg-orange-700 text-white font-bold px-6 py-3 rounded-2xl text-xs sm:text-sm shadow-md transition btn-touch flex items-center space-x-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Pilih Level Lain</span>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="bg-slate-100 border-t border-slate-200 p-3 text-center text-xs text-slate-500 font-semibold no-print">
+            Master Chef Algoritma &copy; Game Edukasi Logika Pemrograman Berbasis Resep Masakan
+        </footer>
+
+    </main>
+
+    <!-- LOGIC JAVASCRIPT SYSTEM -->
+    <script>
+        let state = {
+            userName: '',
+            userClass: '',
+            currentLevel: 1,
+            score: 0,
+            soundEnabled: true,
+            availableBlocks: [],
+            recipeBoard: [],
+            correctSequence: [],
+            timerInterval: null,
+            secondsElapsed: 0,
+            levelCondition: null // Untuk Branching Level 2
+        };
+
+        /* WEB AUDIO API SYNTHESIZER */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
+                } 
+                else if (type === 'snap') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                }
+                else if (type === 'success') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.2);
+                    });
+                }
+                else if (type === 'error') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.setValueAtTime(110, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (state.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                playSound('click');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-300';
+            }
+        }
+
+        function showPage(pageId) {
+            playSound('click');
+            const pages = ['page-login', 'page-materi', 'page-select-level', 'page-gameplay', 'page-result'];
+            pages.forEach(p => document.getElementById(p).classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value.trim();
+
+            if (!nama || !kelas) return;
+
+            state.userName = nama;
+            state.userClass = kelas;
+
+            document.getElementById('display-user-name').innerText = nama;
+            document.getElementById('display-user-class').innerText = 'Kelas: ' + kelas;
+            document.getElementById('header-user-info').classList.remove('hidden');
+
+            playSound('success');
+            showPage('page-materi');
+        }
+
+        /* DATA LEVEL DAN ALGORITMA MEMASAK */
+        function startLevel(lvl) {
+            state.currentLevel = lvl;
+            state.recipeBoard = [];
+            state.secondsElapsed = 0;
+
+            document.getElementById('game-level-badge').innerText = `Level ${lvl}`;
+            document.getElementById('game-score').innerText = state.score;
+
+            if (lvl === 1) {
+                // LEVEL 1: SEQUENCING TEH MANIS
+                document.getElementById('game-mission-text').innerText = "Buat Teh Manis Hangat (Urutkan dari Awal sampai Akhir)";
+                
+                state.correctSequence = [
+                    "Masukkan Kantong Teh ke Gelas",
+                    "Tuangkan Air Panas",
+                    "Tambahkan Gula Pasir",
+                    "Aduk Hingga Larut"
+                ];
+
+                state.availableBlocks = shuffleArray([
+                    { id: "step-1", text: "Masukkan Kantong Teh ke Gelas", icon: "fa-mug-hot", color: "bg-amber-100 text-amber-800" },
+                    { id: "step-2", text: "Tuangkan Air Panas", icon: "fa-glass-water", color: "bg-blue-100 text-blue-800" },
+                    { id: "step-3", text: "Tambahkan Gula Pasir", icon: "fa-spoon", color: "bg-orange-100 text-orange-800" },
+                    { id: "step-4", text: "Aduk Hingga Larut", icon: "fa-rotate-right", color: "bg-emerald-100 text-emerald-800" }
+                ]);
+            }
+            else if (lvl === 2) {
+                // LEVEL 2: BRANCHING (PERCABANGAN) NASI GORENG
+                const isSpicy = Math.random() > 0.5; // Randomize Request Pelanggan
+                state.levelCondition = isSpicy;
+
+                const missionStr = isSpicy 
+                    ? "Pesanan: Nasi Goreng PEDAS! (Gunakan Percabangan IF PEDAS)" 
+                    : "Pesanan: Nasi Goreng TIDAK PEDAS! (Lewatkan Cabai dalam IF PEDAS)";
+                
+                document.getElementById('game-mission-text').innerText = missionStr;
+
+                state.correctSequence = isSpicy ? [
+                    "Panaskan Minyak & Tumis Bumbu",
+                    "JIKA Pedas: Tambahkan Potongan Cabai",
+                    "Masukkan Nasi & Kecap",
+                    "Aduk Hingga Matang"
+                ] : [
+                    "Panaskan Minyak & Tumis Bumbu",
+                    "Masukkan Nasi & Kecap",
+                    "Aduk Hingga Matang"
+                ];
+
+                state.availableBlocks = shuffleArray([
+                    { id: "step-b1", text: "Panaskan Minyak & Tumis Bumbu", icon: "fa-fire-burner", color: "bg-orange-100 text-orange-800" },
+                    { id: "step-b2", text: "JIKA Pedas: Tambahkan Potongan Cabai", icon: "fa-pepper-hot", color: "bg-rose-100 text-rose-800" },
+                    { id: "step-b3", text: "Masukkan Nasi & Kecap", icon: "fa-bowl-rice", color: "bg-amber-100 text-amber-800" },
+                    { id: "step-b4", text: "Aduk Hingga Matang", icon: "fa-utensils", color: "bg-emerald-100 text-emerald-800" }
+                ]);
+            }
+            else if (lvl === 3) {
+                // LEVEL 3: LOOPING & COMPLEX SEQUENCING BURGER
+                document.getElementById('game-mission-text').innerText = "Buat Burger Bertumpuk (Looping: Repeat 2x Lapis Keju & Daging)";
+
+                state.correctSequence = [
+                    "Posisikan Roti Burger Bawah",
+                    "REPEAT 2X: Tambahkan Daging & Keju",
+                    "Tuangkan Saus & Mayones",
+                    "Tutup Dengan Roti Burger Atas"
+                ];
+
+                state.availableBlocks = shuffleArray([
+                    { id: "step-c1", text: "Posisikan Roti Burger Bawah", icon: "fa-bread-slice", color: "bg-amber-100 text-amber-800" },
+                    { id: "step-c2", text: "REPEAT 2X: Tambahkan Daging & Keju", icon: "fa-rotate", color: "bg-purple-100 text-purple-800" },
+                    { id: "step-c3", text: "Tuangkan Saus & Mayones", icon: "fa-bottle-droplet", color: "bg-rose-100 text-rose-800" },
+                    { id: "step-c4", text: "Tutup Dengan Roti Burger Atas", icon: "fa-hamburger", color: "bg-emerald-100 text-emerald-800" }
+                ]);
+            }
+
+            renderBlocks();
+            renderRecipeBoard();
+            startTimer();
+            showPage('page-gameplay');
+        }
+
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function startTimer() {
+            clearInterval(state.timerInterval);
+            state.timerInterval = setInterval(() => {
+                state.secondsElapsed++;
+                const mins = Math.floor(state.secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (state.secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('game-timer').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(state.timerInterval);
+        }
+
+        function renderBlocks() {
+            const container = document.getElementById('available-blocks');
+            container.innerHTML = '';
+
+            state.availableBlocks.forEach((block) => {
+                const blockEl = document.createElement('div');
+                blockEl.className = `step-block p-3 rounded-xl border-2 border-slate-200 ${block.color} font-bold text-xs sm:text-sm flex items-center justify-between shadow-sm btn-touch`;
+                blockEl.onclick = () => addBlockToBoard(block);
+
+                blockEl.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid ${block.icon} text-base"></i>
+                        <span>${block.text}</span>
+                    </div>
+                    <i class="fa-solid fa-plus text-slate-400"></i>
+                `;
+
+                container.appendChild(blockEl);
+            });
+        }
+
+        function renderRecipeBoard() {
+            const board = document.getElementById('recipe-board');
+            board.innerHTML = '';
+
+            if (state.recipeBoard.length === 0) {
+                board.innerHTML = `
+                    <div class="text-center text-slate-400 py-8 text-xs font-semibold">
+                        <i class="fa-solid fa-hand-pointer text-2xl mb-1 block opacity-40"></i>
+                        Papan Algoritma Masih Kosong.<br>Pilih blok di sebelah kiri!
+                    </div>
+                `;
+            } else {
+                state.recipeBoard.forEach((block, index) => {
+                    const slotEl = document.createElement('div');
+                    slotEl.className = `p-3 rounded-xl border-2 border-amber-300 bg-white font-bold text-xs sm:text-sm flex items-center justify-between shadow-md`;
+
+                    slotEl.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 h-6 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center">${index + 1}</span>
+                            <span class="text-slate-800">${block.text}</span>
+                        </div>
+                        <button onclick="removeBlockFromBoard(${index})" class="text-rose-500 hover:text-rose-700 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+
+                    board.appendChild(slotEl);
+                });
+            }
+        }
+
+        function addBlockToBoard(block) {
+            playSound('snap');
+            state.recipeBoard.push(block);
+            renderRecipeBoard();
+        }
+
+        function removeBlockFromBoard(index) {
+            playSound('click');
+            state.recipeBoard.splice(index, 1);
+            renderRecipeBoard();
+        }
+
+        function resetRecipeBoard() {
+            playSound('click');
+            state.recipeBoard = [];
+            renderRecipeBoard();
+        }
+
+        function showStatusMessage(text, isError = false) {
+            const msgBox = document.getElementById('status-message');
+            msgBox.innerText = text;
+            msgBox.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
+
+            if (isError) {
+                msgBox.classList.add('bg-rose-100', 'text-rose-800');
+            } else {
+                msgBox.classList.add('bg-emerald-100', 'text-emerald-800');
+            }
+
+            setTimeout(() => {
+                msgBox.classList.add('hidden');
+            }, 3500);
+        }
+
+        /* JALANKAN EKSEKUSI ALGORITMA MEMASAK */
+        function runCookingAlgorithm() {
+            const currentSteps = state.recipeBoard.map(b => b.text);
+
+            if (currentSteps.length === 0) {
+                playSound('error');
+                showStatusMessage("⚠️ Papan resep masih kosong! Masukkan langkah memasak terlebih dahulu.", true);
+                return;
+            }
+
+            let isCorrect = true;
+
+            if (currentSteps.length !== state.correctSequence.length) {
+                isCorrect = false;
+            } else {
+                for (let i = 0; i < currentSteps.length; i++) {
+                    if (currentSteps[i] !== state.correctSequence[i]) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isCorrect) {
+                playSound('success');
+                state.score += 100;
+                document.getElementById('game-score').innerText = state.score;
+                showStatusMessage("🎉 KELAS CHEF! Algoritma Resep Benar & Masakan Sempurna!");
+                
+                setTimeout(() => {
+                    if (state.currentLevel < 3) {
+                        startLevel(state.currentLevel + 1);
+                    } else {
+                        finishGame();
+                    }
+                }, 1800);
+            } else {
+                playSound('error');
+                showStatusMessage("❌ ALGORITMA SALAH! Urutan resep kurang tepat atau ada langkah yang terlewat.", true);
+            }
+        }
+
+        function finishGame() {
+            stopTimer();
+            playSound('success');
+
+            document.getElementById('res-name').innerText = state.userName;
+            document.getElementById('res-class').innerText = 'Kelas: ' + state.userClass;
+            document.getElementById('res-score').innerText = state.score;
+
+            const mins = Math.floor(state.secondsElapsed / 60).toString().padStart(2, '0');
+            const secs = (state.secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('res-time').innerText = `${mins}:${secs}`;
+
+            showPage('page-result');
+        }
+    </script>
+</body>
+</html>
